@@ -51,7 +51,7 @@ artist_table_create = ("""
         longitude FLOAT
     );
 """)
-# TODO Not sure about data types here, weekday could be a string instead?
+
 time_table_create = ("""
     CREATE TABLE IF NOT EXISTS times (
         start_time TIMESTAMP PRIMARY KEY, 
@@ -74,7 +74,7 @@ songplay_table_insert = ("""
 user_table_insert = ("""
     INSERT INTO users (user_id, first_name, last_name, gender, level)
     VALUES (%s, %s, %s, %s, %s)
-    ON CONFLICT (user_id) DO NOTHING;
+    ON CONFLICT (user_id) DO UPDATE SET level = EXCLUDED.level;
 """)
 
 song_table_insert = ("""
@@ -106,5 +106,3 @@ song_select = ("""
 
 create_table_queries = [user_table_create, song_table_create, artist_table_create, time_table_create, songplay_table_create]
 drop_table_queries = [songplay_table_drop, user_table_drop, song_table_drop, artist_table_drop, time_table_drop]
-
-# TODO Check 'conflicts'
