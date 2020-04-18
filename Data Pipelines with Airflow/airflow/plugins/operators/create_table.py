@@ -15,15 +15,17 @@ class CreateTableOperator(BaseOperator):
         self.redshift_conn_id = redshift_conn_id
 
     def execute(self, context):
-        redshift_hook = PostgresHook(postgres_conn_id=self.redshift_conn_id)
+        self.log.info('Create Redshift connection...')
+        redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
         # Read file to get SQL statements
-        fd = open(CreateTablesOperator.sql_file, 'r')
+        self.log.info('Read SQL file...')
+        fd = open(CreateTableOperator.sql_file, 'r')
         sql = fd.read()
         fd.close()
 
-        sql_queries = sql_file.split(';')
+        sql_queries = sql.split(';')
         self.log.info('Creating tables...')
         # Run each query
         for query in sql_queries:
-            if command.rstrip() != '':
+            if query.rstrip() != '':
                 redshift.run(query) # Each run creates a table

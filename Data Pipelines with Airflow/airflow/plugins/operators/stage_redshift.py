@@ -1,4 +1,5 @@
 from airflow.hooks.postgres_hook import PostgresHook
+from airflow.hooks.aws_hook import AwsHook
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
@@ -28,7 +29,7 @@ class StageToRedshiftOperator(BaseOperator):
         self.table = table
         self.s3_bucket = s3_bucket
         self.s3_key = s3_key
-        self.execution_date = kwargs.get('execution_date')
+        #self.execution_date = kwargs.get('execution_date')
 
     def execute(self, context):
         aws_hook = AwsHook(self.aws_credentials_id)
@@ -41,7 +42,9 @@ class StageToRedshiftOperator(BaseOperator):
         self.log.info("Copying data from S3 to Redshift")
         
         s3_path = "s3://{}".format(self.s3_bucket)
-        if self.execution_date:
+        execution_time = {{ ds }}
+        #if self.execution_date:
+        if execution_time:
             year = self.execution_date.strftime("%Y")
             month = self.execution_date.strftime("%m")
             day = self.execution_date.strftime("%d")
