@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS public.artists (
 	name varchar(256),
 	location varchar(256),
 	lattitude numeric(18,0),
-	longitude numeric(18,0)
+	longitude numeric(18,0),
+    CONSTRAINT artists_pkey PRIMARY KEY (artistid)
 );
 
 CREATE TABLE IF NOT EXISTS public.songplays (

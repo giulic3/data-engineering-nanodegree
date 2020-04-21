@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import os
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators import (StageToRedshiftOperator, CreateTableOperator, LoadFactOperator, LoadDimensionOperator, DataQualityOperator)
+from operators import StageToRedshiftOperator, CreateTableOperator, LoadFactOperator, LoadDimensionOperator, DataQualityOperator
 from helpers import SqlQueries
 
 AWS_KEY = os.environ.get('AWS_KEY')
@@ -10,7 +10,7 @@ AWS_SECRET = os.environ.get('AWS_SECRET')
 
 default_args = {
     'owner': 'giulia',
-    'start_date': datetime(2019, 1, 12), # TODO also end date?
+    'start_date': datetime(2019, 1, 12),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=5),
@@ -22,7 +22,7 @@ dag = DAG('sparkify_airflow_dag',
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
           schedule_interval='0 * * * *',
-          max_active_runs=3
+          max_active_runs=1
         )
 
 start_operator = DummyOperator(task_id='Begin_execution', dag=dag)
@@ -41,10 +41,9 @@ stage_events_to_redshift = StageToRedshiftOperator(
     aws_credentials_id="aws_credentials", # ID provided when creating connection in AirflowUI
     table="staging_events",
     s3_bucket="udacity-dend",
-    s3_key="log_data",
+    s3_key="log_data/{execution_date.year}/{execution_date.month}/{execution_date.day}/",
     region="us-west-2",
     data_format="JSON"
-    #execution_date=start_date # Part of kwargs
 )
 
 stage_songs_to_redshift = StageToRedshiftOperator(
@@ -57,8 +56,8 @@ stage_songs_to_redshift = StageToRedshiftOperator(
     s3_bucket="udacity-dend",
     s3_key="song_data",
     region="us-west-2",
-    data_format="JSON"
-    #execution_date=start_date # Part of kwargs
+    ignore_headers=0,
+    data_format="JSON",
 )
 
 load_songplays_table = LoadFactOperator(
@@ -113,6 +112,7 @@ run_quality_checks = DataQualityOperator(
 
 end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)
 
+# Tasks dependencies
 start_operator >> create_tables >> [stage_events_to_redshift, stage_songs_to_redshift]
 
 [stage_events_to_redshift, stage_songs_to_redshift] >> load_songplays_table
