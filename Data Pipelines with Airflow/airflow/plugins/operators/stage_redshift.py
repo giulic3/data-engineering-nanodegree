@@ -6,12 +6,14 @@ from airflow.utils.decorators import apply_defaults
 class StageToRedshiftOperator(BaseOperator):
     ui_color = '#358140'
     template_fields = ("s3_key",)
+    # Copy on song_data with full dataset can be very slow
     copy_sql = """
         COPY {}
         FROM '{}'
         ACCESS_KEY_ID '{}'
         SECRET_ACCESS_KEY '{}'
-        TIMEFORMAT as 'epochmillisecs'
+        IGNOREHEADER {}
+        {}
     """
 
     @apply_defaults
@@ -24,6 +26,7 @@ class StageToRedshiftOperator(BaseOperator):
                  delimiter=",",
                  ignore_headers=1,
                  data_format="csv",
+                 jsonpaths="",
                  *args, **kwargs):
 
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
@@ -32,9 +35,10 @@ class StageToRedshiftOperator(BaseOperator):
         self.table = table
         self.s3_bucket = s3_bucket
         self.s3_key = s3_key
-        self.delimiter=delimiter
-        self.ignore_headers=ignore_headers
-        self.data_format=data_format.lower()     # 'csv', 'json'
+        self.delimiter = delimiter
+        self.ignore_headers = ignore_headers
+        self.data_format = data_format.lower()     # 'csv', 'json'
+        self.jsonpaths = jsonpaths
 
     def execute(self, context):
         aws_hook = AwsHook(self.aws_credentials_id)
@@ -48,15 +52,15 @@ class StageToRedshiftOperator(BaseOperator):
         if self.data_format == 'csv':
             autoformat = "DELIMITER '{}'".format(self.delimiter)
         elif self.data_format == 'json':
-            json_option = self.jsonpaths or 'auto'
-            autoformat = "FORMAT AS JSON '{}'".format(json_option)
+            jsonoption = self.jsonpaths or 'auto'
+            autoformat = "FORMAT AS JSON '{}'".format(jsonoption)
             
         self.log.info("Copying data from S3 to Redshift")
         # Set S3 path based on execution dates  
         rendered_key = self.s3_key.format(**context)
         self.log.info('Rendered key is ' + rendered_key)
         s3_path = "s3://{}/{}".format(self.s3_bucket, rendered_key)
-        # result: s3://s3_bucket/year/month/day/s3_key
+
         formatted_sql = StageToRedshiftOperator.copy_sql.format(
             self.table,
             s3_path,
