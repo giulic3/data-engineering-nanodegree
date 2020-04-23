@@ -11,6 +11,7 @@ AWS_SECRET = os.environ.get('AWS_SECRET')
 default_args = {
     'owner': 'giulia',
     'start_date': datetime(2018, 11, 4),
+    'end_date': datetime(2018, 11, 7),
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=5),
@@ -74,7 +75,8 @@ load_user_dimension_table = LoadDimensionOperator(
     dag=dag,
     redshift_conn_id="redshift",
     table="users",
-    sql=SqlQueries.user_table_insert
+    sql=SqlQueries.user_table_insert,
+    update_strategy="overwrite"
 )
 
 load_song_dimension_table = LoadDimensionOperator(
@@ -82,7 +84,8 @@ load_song_dimension_table = LoadDimensionOperator(
     dag=dag,
     redshift_conn_id="redshift",
     table="songs",
-    sql=SqlQueries.song_table_insert
+    sql=SqlQueries.song_table_insert,
+    update_strategy="overwrite"
 )
 
 load_artist_dimension_table = LoadDimensionOperator(
@@ -90,7 +93,8 @@ load_artist_dimension_table = LoadDimensionOperator(
     dag=dag,
     redshift_conn_id="redshift",
     table="artists",
-    sql=SqlQueries.artist_table_insert
+    sql=SqlQueries.artist_table_insert,
+    update_strategy="overwrite"
 )
 
 load_time_dimension_table = LoadDimensionOperator(
@@ -98,7 +102,8 @@ load_time_dimension_table = LoadDimensionOperator(
     dag=dag,
     redshift_conn_id="redshift",
     table="time",
-    sql=SqlQueries.time_table_insert
+    sql=SqlQueries.time_table_insert,
+    update_strategy="overwrite"
 )
 
 run_quality_checks = DataQualityOperator(

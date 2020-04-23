@@ -11,6 +11,7 @@ class LoadDimensionOperator(BaseOperator):
                  redshift_conn_id="",
                  table="",
                  sql="",
+                 update_strategy="",  # append, overwrite
                  *args, **kwargs):
 
         super(LoadDimensionOperator, self).__init__(*args, **kwargs)
@@ -20,7 +21,11 @@ class LoadDimensionOperator(BaseOperator):
 
     def execute(self, context):
         redshift = PostgresHook(self.redshift_conn_id)
-        # Update with truncate first strategy (only for dimension tables)
-        query = 'TRUNCATE {}; INSERT INTO {} ({})'.format(self.table, self.table, self.sql)
+
+        if update_strategy == "overwrite":
+            # Update with truncate first strategy (only for dimension tables)
+            query = 'TRUNCATE {}; INSERT INTO {} ({})'.format(self.table, self.table, self.sql)
+        else if update_strategy == "append":
+            query = 'INSERT INTO {} ({})'.format(self.table, self.sql)
         redshift.run(query)
         self.log.info('Success')
