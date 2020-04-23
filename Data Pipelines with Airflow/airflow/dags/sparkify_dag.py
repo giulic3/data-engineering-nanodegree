@@ -45,7 +45,7 @@ stage_events_to_redshift = StageToRedshiftOperator(
     s3_key="log_data/{execution_date.year}/{execution_date.month}/{execution_date.year}-{execution_date.month}-0{execution_date.day}-events.json",
     region="us-west-2",
     data_format="json",
-    jsonpaths="s3://myawsbucket-dend/log_data_jsonpaths.json"
+    jsonpaths=""
 )
 
 stage_songs_to_redshift = StageToRedshiftOperator(
@@ -60,7 +60,7 @@ stage_songs_to_redshift = StageToRedshiftOperator(
     region="us-west-2",
     ignore_headers=0,
     data_format="json",
-    jsonpaths="s3://myawsbucket-dend/song_data_jsonpaths.json"
+    jsonpaths=""
 )
 
 load_songplays_table = LoadFactOperator(
